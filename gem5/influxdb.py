@@ -18,7 +18,7 @@ token = "iaVHealnZgJFz2OhCyNeWCSlwSvuA7XNBvfkxW4-ruPC2XclRG1zhVXcNtiNWaa-p7fLGRL
 ip = "http://10.240.192.131:8086"
 org = "intel"
 bucket = "demo"
-measurement = "gem5"
+measurement = "gem5demo"
 flag = True
 
 SelectEvent = [
@@ -112,20 +112,32 @@ def Write_Data(client):
     #     IntervalStats[AllIntervalResult[i][1]] = 0
     # AllIntervalResultLength = len(AllIntervalResult)
     # AllLastResultlength = len(AllLastResult)
-    input = measurement + ",id=cpu "
+    # input = measurement
     for result in AllResult:
+        input = measurement
         # print(result)
+        # 按照"." 或者 "::"分割事件
         name = result[0]
+        PartName = name.split(".")
+        PartNameNums = len(PartName)
+
+        for i in range(0,PartNameNums):
+            input = input + ",Part" + str(i) + "=" + PartName[i]
+        for i in range(PartNameNums,5):
+            input = input + ",Part" + str(i) + "=null" 
+        input = input + " "
+        # 一个事件有多个统计信息，比如
+        # system.cpu.statIssuedInstType_0::SimdAlu            0      0.00%
         if len(result)>2 :
             for i in range(1,len(result)) :
                 tempname = name + str(i)
                 input = input + tempname + "=" + result[i] + ","
         else:
             input = input + name + "=" + result[1] + ","
-    input = input[:-1]
-    print(input)
-    write_api = client.write_api(write_options=SYNCHRONOUS)
-    write_api.write(bucket, org, input)
+        input = input[:-1]
+        print(input)
+        write_api = client.write_api(write_options=SYNCHRONOUS)
+        write_api.write(bucket, org, input)
     # time.sleep(1)    
 
     # while Index1 < AllIntervalResultLength and Index2  < AllLastResultlength:
@@ -179,17 +191,18 @@ if __name__ == '__main__':
 
         if flag is True :
             Delete_Measurement(client)
+            print("Delete Measurement")
            
         # StatsFilePath = "data/emu.txt"
         # f = open(StatsFilePath,"r")
         # lines = f.readlines()
         # f.close()
         # Read_Data()
-        while True:
-            Write_Data(client)
-        # Write Data
-        # while(True):
+        # while True:
         #     Write_Data(client)
+        # Write Data
+        while(True):
+            Write_Data(client)
 
         # Query Data
         # query = 'from(bucket: "demo") |> range(start: -1m)'

@@ -18,7 +18,7 @@ token = "iaVHealnZgJFz2OhCyNeWCSlwSvuA7XNBvfkxW4-ruPC2XclRG1zhVXcNtiNWaa-p7fLGRL
 ip = "http://10.240.192.131:8086"
 org = "intel"
 bucket = "demo"
-measurement = "gem5demo"
+measurement = "gem5template"
 flag = True
 
 SelectEvent = [
@@ -50,29 +50,38 @@ def SplitStr(line):
     Result = line.split(",")
     return Result
 
-def SelectInfo(line,Events):
+def SelectInfo(line):
     Result = []
-    for event in Events:
-        if line.find(event) != -1 :
+    pos = line.find("#")
+    line = line[0:pos]
 
-            pos = line.find("#")
-            line = line[0:pos]
+    pos = line.find(" ")
+    name = line[0:pos]        
+    
+    pos = line.find(" ")
+    num = line[pos:]
+    i = 0
+    numlist = list(num)
+    while i < len(numlist):
+        if(numlist[i]!=' '):
+            numlist[i-1]=','
+            while numlist[i] != ' ':
+                i = i + 1
+            continue
+        i = i + 1
+    num = "".join(numlist)
+    num = num.replace(" ","").replace("\n","").replace("\t","")
+    
+    line = name + num
+    # print(line) 
+    # print(line)
+    #去掉字符串中的制表符和回车，然后空格分隔成list
+    # line = re.sub("\t|\n|\r","",line)
+    Result = line.split(",")
+    if Result[1] == "nan":
+        Result[1] = "0"
+    # print(Result)
 
-            pos = line.find(" ")
-            name = line[0:pos]        
-           
-            pos = line.find(" ")
-            num = line[pos:]
-            num = num.replace(" ","")
-            
-            line = name + " " + num
-            # print(line) 
-            # print(line)
-            #去掉字符串中的空格、制表符和回车，然后空格分隔成list
-            line = re.sub("\t|\n","",line)
-            Result = line.split(" ")
-            if event is Result[0]:
-                return Result
     return Result
 
 #读取统计信息
@@ -88,14 +97,11 @@ def Read_Data():
         lines = lines[2:len(lines)-2]
     os.remove(FilePath)
 
-
     #选择出想要统计的信息
     AllResult = []
     for line in lines:
-        Result = SelectInfo(line,SelectEvent)
-        if len(Result) > 0:
-            AllResult.append(Result)
-
+        Result = SelectInfo(line)
+        AllResult.append(Result)
     return AllResult
     
 def Write_Data(client):
@@ -124,11 +130,13 @@ def Write_Data(client):
         for i in range(0,PartNameNums):
             input = input + ",Part" + str(i) + "=" + PartName[i]
         for i in range(PartNameNums,5):
-            input = input + ",Part" + str(i) + "=null" 
+            input = input + ",Part" + str(i) + "=0" 
         input = input + " "
         # 一个事件有多个统计信息，比如
         # system.cpu.statIssuedInstType_0::SimdAlu            0      0.00%
+        # print(result)
         if len(result)>2 :
+            continue
             for i in range(1,len(result)) :
                 tempname = name + str(i)
                 input = input + tempname + "=" + result[i] + ","
@@ -138,25 +146,7 @@ def Write_Data(client):
         print(input)
         write_api = client.write_api(write_options=SYNCHRONOUS)
         write_api.write(bucket, org, input)
-    # time.sleep(1)    
 
-    # while Index1 < AllIntervalResultLength and Index2  < AllLastResultlength:
-    #     input = measurement + ",id=cpu "
-    #     Cycle = AllIntervalResult[Index1][0]
-    #     input = input + "Cycle=" + Cycle + ","
-    #     while Index1 < AllIntervalResultLength and Cycle == AllIntervalResult[Index1][0]:
-    #         IntervalStats[AllIntervalResult[Index1][1]] = int(AllIntervalResult[Index1][2])/10000
-    #         input = input + AllIntervalResult[Index1][1] + "=" + str(IntervalStats[AllIntervalResult[Index1][1]]) + ","
-    #         Index1 = Index1 + 1
-    #     while Index2 < AllLastResultlength and Cycle == AllLastResult[Index2][0]:
-    #         input = input + AllLastResult[Index2][1] + "=" + AllLastResult[Index2][2] + ","
-    #         Index2 = Index2 + 1
-    #     input = input[:-1]
-    #     # print(input)
-
-    #     write_api = client.write_api(write_options=SYNCHRONOUS)
-    #     write_api.write(bucket, org, input)
-    #     time.sleep(5)
 
     
     #传入influxdb2.3的语句：input = "cpu,id=cpu host=host1,list1=1,list2=2,list3=3"
@@ -198,11 +188,11 @@ if __name__ == '__main__':
         # lines = f.readlines()
         # f.close()
         # Read_Data()
-        # while True:
-        #     Write_Data(client)
-        # Write Data
-        while(True):
+        while True:
             Write_Data(client)
+        # Write Data
+        # while(True):
+        #     Write_Data(client)
 
         # Query Data
         # query = 'from(bucket: "demo") |> range(start: -1m)'

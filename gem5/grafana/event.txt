@@ -1,0 +1,16 @@
+system.cpu.branchPred.BTBHitRatio
+system.cpu.branchPred.BTBHitRatio
+system.cpu.branchPred.BTBHitRatio
+system.cpu.branchPred.BTBHits
+system.cpu.branchPred.BTBHits
+system.cpu.branchPred.BTBHits
+system.cpu.branchPred.condIncorrect
+system.cpu.branchPred.condIncorrect
+system.cpu.branchPred.condIncorrect
+system.cpu.branchPred.condPredicted
+system.cpu.branchPred.condPredicted
+system.cpu.branchPred.condPredicted
+system.cpu.branchPred.indirectHits
+system.cpu.branchPred.indirectHits
+system.cpu.branchPred.indirectHits
+
